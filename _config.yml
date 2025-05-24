@@ -23,7 +23,7 @@ email: mbyx.dev@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   A blog about my progress for the project 'Modernising the libc Crate'
   for the Rust Foundation in GSoC 2025!
-baseurl: "/gsoc25_blog/posts" # the subpath of your site, e.g. /blog
+baseurl: "/gsoc25_blog" # the subpath of your site, e.g. /blog
 url: "https://mbyx.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: mbyx
 github_username:  mbyx
