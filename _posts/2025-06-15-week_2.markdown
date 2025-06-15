@@ -1,0 +1,10 @@
+Quite a lot of things happened in this week!
+
+This was essentially my first time contributing to an open source project with more than 10 lines of code, and I didn't get it right first try. But that's perfectly fine! We're here to learn after all, so my big monolith PR was divided into 4 smallers ones of which 2 have been submitted, and one has been accepted. The process is slow but if it means cleaner code (and the reviews have genuinely been very useful), then its a good thing!
+
+- The [first PR](https://github.com/rust-lang/libc/pull/4484) adds some the ability to combine the crate being parsed into a single file with all macros expanded, as well as a stub for testing.
+- The [second PR](https://github.com/rust-lang/libc/pull/4485) adds cleaned up code for extraction of relevant FFI items for testing purposes, as well as a bunch of tests for making sure they work.
+- The third PR will focus on adding translation of these FFI items into C equivalents to be used for testing the crate, as well as relevant tests.
+- The fourth PR will focus on adding configuration options to these parts, along with relevant tests.
+
+Meanwhile in a local sandbox I've been working out all the code for the other PRs while the second one is being reviewed. Soon I'll also start research on using templates to generate the tests we need, and then we'll have a minimum viable product ready!
