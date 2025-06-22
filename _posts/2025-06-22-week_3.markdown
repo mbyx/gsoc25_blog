@@ -1,0 +1,5 @@
+This week was quite fun! It was mainly spent in trying to generate, compile, and run the tests. Generation was quite easy due to [askama](https://docs.rs/askama/latest/askama/), however compiling and running is a whole other matter. While tier 1 targets in CI are tested without cross compiling, the same cannot be said about tier 2 targets, and as such the correct linker and runner needed to be present for it to work. Thankfully the current CI system already had my back in that regard, and so I was able to successfully compile and run the tests on a number of platforms, although there still are some bugs, either in the CI or in my code (guess which).
+
+Next step is to iron out those chinks, clean the code, and get the ctest-test crate running on the new infrastructure. I tinkered with this and could do it to an extent, but it was quite buggy and cursed.
+
+Once that is done the base of the infrastructure is done, then the frontend api has to be improved, bugs fixed, and more test generation templates are to be written.
