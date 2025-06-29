@@ -1,0 +1,14 @@
+There were quite a lot of chinks in the code in fact!
+
+Ultimately, given that we were trying very hard to fight an uphill battle against the build system, it was decided that it was best
+to not try to compile the generated binary and link it ourselves, instead letting the `build.rs` file deal with that problem. This
+does mean that our integration tests are limited to just non cross compiled targets now, but so long as it allows cargo and `cc`
+to just work, it's a good compromise. Besides, `ctest-test` still has to be ported over, and that should provide all the testing
+we need.
+
+The whole week was spent improving the code, as I worked in another unpublished commit to figure out how to port `ctest-test` and
+to add some more methods to the generation frontend. More or less, the hard part of this project has begun, with things becoming
+more complex and interconnected. Once the PR is merged, two smaller PRs will be made that deal with test generation of items other
+than constants, and the frontend respectively. That should finish up the 5th week, and hopefully by the end of the 6th, we shall
+have finished porting over `ctest-test`, and begun integrating `ctest-next` into `libc-test`. Although that is still quite a ways
+away.
