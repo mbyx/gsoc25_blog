@@ -1,13 +1,98 @@
+
+## Introduction
+
 This is the start of my blog that will document my experience and progress for [GSoC 2025](https://summerofcode.withgoogle.com/) as a contributor for [The Rust Foundation](https://www.rust-lang.org/), working on my project titled [Modernising the \`libc\` Crate](https://mbyx.github.io/gsoc25_blog/Proposal.pdf)! I also hope this helps inspire any future GSoC students or others in general for contributing to open source!
 
 A short summary of my project is that it is about helping release version 1.0 of \`libc\`, which requires fixing all the small issues as well as the main meat of the project being rewriting the testing infrastructure that they use, which unfortunately is quite old and fails at parsing newer rust syntax.
 
+## The Community Bonding Period
+
 Unfortunately, my summer had not yet started during the Community Bonding Period and I was swamped with exams, as a result I was not able to interact with the community as much as I wanted to. We attended a fun meeting with the other contributors where we talked to each other about our projects, I was able to talk with my mentor Trevor Gross and others, who helped point me towards some interesting references for the project. We discussed some of the basic project structure and I mainly spent the free time that I had reading through the references we had compiled, as well as playing around with the libraries we were planning on using.
 
-Once again, due to my exams I had to start the Coding Period 2 days late on the 4th of June, but that didn't stop me from planning the project in my head whenever I could. Once I was officially free from exams, I started work on the first obstacle towards project completion, namely extracting symbols from the source code so that they can be tested. These thankfully do not include all possible items that can be made in Rust, but do include things like structs, unions, constants, extern function, and extern statics to name a few.
+Once again, due to my exams I had to start the Coding Period 2 days late on the 4th of June, but that didn't stop me from planning the project in my head whenever I could. Once I was officially free from exams, I started work on the first obstacle towards project completion, namely extracting symbols from the source code so that they can be tested. These thankfully do not include all possible items that can be made in Rust, but do include things like structs, unions, constants, extern functions, and extern statics to name a few.
 
-The first week was spent on finalizing the extraction logic as much as possible and stubbing out the next part (which is translating Rust code to C, because tests are run in both languages, to make sure they have the same alignment and size). The library used for the parsing was \`syn\` and it was an absolute joy to work with, and once again made me realize just how comfortable the Rust ecosystem can be, with its great documentation.
+## The Coding Period Begins
+The first week was spent on finalizing the extraction logic as much as possible and stubbing out the next part (which is translating Rust code to C, because tests are run in both languages, to make sure they have the same alignment and size). The library used for the parsing was [`syn`](https://crates.io/crates/syn) and it was an absolute joy to work with, and once again made me realize just how comfortable the Rust ecosystem can be, with its great documentation.
 
+### Macro Expansion and Merging Files
+One of the more interesting problems I encountered was preprocessing. A Rust project can be made up of multiple files (modules) that all depend on each other, and these files can contain macros. These macros had to first be expanded, and the files had to be merged together in a cohesive way so that extracting the items needed was easier.
+
+For this I used [`cargo expand`](https://github.com/dtolnay/cargo-expand), which did solve the issue of extraction from a Rust project, however it did create a new one, which is that since it depends on cargo, it is unable to work with single files not managed by the build system. In the end I had to use the (almost same) expansion capability provided by the nightly Rust compiler.
+```sh
+$ RUSTC_BOOTSTRAP=1 rustc -Zunpretty=expanded path/to/crate/lib.rs
+```
+
+As an example, consider a simple two file structure:
+```
+root/
+|_ lib.rs
+|_ sibling.rs
+```
+
+If we assume that `lib.rs` has the following content:
+```rust
+// lib.rs
+
+mod sibling;
+
+macro_rules! item {
+    ($i:item) => ( $i );
+}
+
+item! {
+    pub struct ByteStruct(sibling::Byte);
+}
+```
+And that `sibling.rs` consists of:
+```rust
+// sibling.rs
+
+pub type Byte = u8;
+```
+
+Then we can simple invoke `cargo expand` or the `rustc` compiler to expand it for us, pointing it to the root (in this case, `lib.rs`):
+```sh
+$ RUSTC_BOOTSTRAP=1 rustc -Zunpretty=expanded root/lib.rs
+```
+
+And we get the following nice expansion, that is valid Rust, mind you, and can be parsed by `syn` to extract everything we need.
+```rust
+#![feature(prelude_import)]
+#![no_std]
+#[prelude_import]
+use ::std::prelude::rust_2015::*;
+#[macro_use]
+extern crate std;
+// lib.rs
+
+mod sibling {
+    pub type Byte = u8;
+}
+macro_rules! item { ($i:item) => ($i); }
+pub struct ByteStruct(sibling::Byte);
+```
+
+
+### Extracting into an Abstract Syntax Tree
+Of course, when you think about extracting items from source code, you have to have some sort of AST to extract into. This was quite trivial to do with the structs and enums that Rust provides, especially since not every syntactical part of each item was needed. Since `syn` itself already provides an AST, we simply used it to extract relevant parts into a simple AST for our use case.
+
+An interesting pattern that is employed by `syn` for this task is the [`Visitor`](https://en.wikipedia.org/wiki/Visitor_pattern) pattern, which is implemented as a trait in Rust, which already has methods for visiting specific types of items and even gives us their AST for free! A small tidbit:
+```rust
+fn visit_item_struct(&mut self, i: &'ast syn::ItemStruct) {
+    let public = is_visible(&i.vis);
+    let ident = i.ident.clone();
+    let fields = match &i.fields {
+        syn::Fields::Named(fields) => collect_fields(&fields.named),
+        syn::Fields::Unnamed(fields) => collect_fields(&fields.unnamed),
+        syn::Fields::Unit => Vec::new(),
+    };
+
+    self.structs.push(Struct::new(public, ident, fields));
+}
+```
+
+
+## What's Next?
 Next week, the goal is to fix any problems in the extraction logic as requested by my mentor, add some sanity tests for the code translation (because having tests for your testing infrastructure is always a good idea :0) and finalize the translation so that test generation can be done with templates and finally those tests can be run!
 
 You can see my progress in the relevant [PR](https://github.com/rust-lang/libc/pull/4477).

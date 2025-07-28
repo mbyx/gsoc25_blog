@@ -1,15 +1,33 @@
+
+Relevant PRs:
+- [moar tests](https://github.com/rust-lang/libc/pull/4556)
+- [frontend](https://github.com/rust-lang/libc/pull/4555)
+- [Really nice ctest-next cleanup](https://github.com/rust-lang/libc/pull/4551)
+- [My proudest achievement](https://github.com/rust-lang/libc/pull/4548)
+- [!ctest-next](https://github.com/rust-lang/libc/pull/4575)
+- [ctest-test-port](https://github.com/rust-lang/libc/pull/4558)
+
+## Introduction
 I'm more or less done with figuring out how everything fits together, and have prototyped things in the previous weeks, such as tests for foreign statics and functions, porting `libc-test`, porting `ctest-test`, etc.
 
 However the amount of changes required for each of these was quite large, as a result once again the PR was split, this time into around 5 PRs. I'm quite happy with it, especially because my mentor showed a neat way we could reduce the complexity of the templates, by basically increasing the amount of work we do in the Rust side (AKA the side I am less likely to break things in :) ).
 
+### Really nice ctest-next cleanup
 Now the templates consists of just a single `for` loop for each test type, in the Rust side we create a simple structure that represents each test, and that structure has everything to write the test pre computed. The advantage being that multiple different items require the same tests, so we can abstract them out to use the same structure.
 
 For example, we have a struct for roundtrip testing called `TestRoundtrip`. This struct has everything needed to perform this test not only for a single item, but for all structs, unions, and aliases.
 
+### Moar tests
+### Roundtripping
 Speaking of roundtrip testing, it's an interesting test that I'd like to talk a bit more about. To test roundtripping of a type, we basically figure out which bytes of a type are padding and which are data bytes. For example, most aliases that don't alias to a struct/union will have no padding bytes. On the other hand, an empty struct would have all padding bytes. A non empty struct would have some padding bytes, this is done for memory alignment purposes. We can't make any guarantees about where the padding is, nor about what random data is in the padding (even if we somehow assign data to it).
 
 Instead, we fill the type's non padding bytes with a known pattern in Rust, and send it over to C. C makes sure that the pattern is what it expects, then it inverts that pattern, and sends it over to Rust. Rust then makes sure that the inverted pattern is as expected. This roundtrip makes sure that the data isn't messed with between the two, and that it's still in the correct place. (The alignment didn't change.)
 
+### Field pointers
 Another interesting test is the `TestFieldPtr` test. On the C side this test is as simple as returning a pointer to a struct field of a struct that the Rust side gives as an argument. The Rust side then checks to see if the pointer points to the correct field of the struct.
 
 Unfortunately, it really isn't that easy, because a struct field can be data (primitive, struct, union) or a more complex type (function pointer, array). For the latter, the syntax for returning them from functions becomes much more complicated. To reduce the complexity, we typedef these types before returning them. This way the function signature itself remains quite simple. Although the typedef still has to be manually constructed properly.
+
+## What's Next?
+
+The mid term evaluation happened, I passed (of course). What I am worried about however is that the project is around 40% done on the halfway point. Time is definitely going to be an issue.

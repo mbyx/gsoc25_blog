@@ -1,5 +1,54 @@
-This week was quite fun! It was mainly spent in trying to generate, compile, and run the tests. Generation was quite easy due to [askama](https://docs.rs/askama/latest/askama/), however compiling and running is a whole other matter. While tier 1 targets in CI are tested without cross compiling, the same cannot be said about tier 2 targets, and as such the correct linker and runner needed to be present for it to work. Thankfully the current CI system already had my back in that regard, and so I was able to successfully compile and run the tests on a number of platforms, although there still are some bugs, either in the CI or in my code (guess which).
+## Introduction
+Relevant PRs: [Generation](https://github.com/rust-lang/libc/pull/4501)
 
-Next step is to iron out those chinks, clean the code, and get the ctest-test crate running on the new infrastructure. I tinkered with this and could do it to an extent, but it was quite buggy and cursed.
+This week was quite fun!
 
-Once that is done the base of the infrastructure is done, then the frontend api has to be improved, bugs fixed, and more test generation templates are to be written.
+It was mainly spent in trying to generate, compile, and run the tests. Generation was quite easy, but compiling and running was a completely different beast.
+
+### Generation
+As mentioned last week, we had considered the use of a templating engine called [askama](https://docs.rs/askama/latest/askama/) to generate the tests. This happened to be a really great idea.
+
+Who knew that templating engines for blogs and static sites would end up being useful for automating test generation of `libc`?
+
+The syntax of `askama` is quite similar to other templating engines (not that I knew what they were before this), although one interesting feature that we abused a ton of is that is supports `let` statements that allow you to use _almost_ any Rust syntax to bind to a variable. This helps simplify the template by grouping all the variables together, although depending on your IDE settings, it still looks quite messy.
+
+How simple you might ask? Well the generation code was around 15 lines:
+```rust
+/// Represents the Rust side of the generated testing suite.
+#[derive(Template, Debug, Clone)]
+#[template(path = "test.rs")]
+pub(crate) struct RustTestTemplate<'a> {
+    ffi_items: &'a FfiItems,
+}
+
+/// Represents the C side of the generated testing suite.
+#[derive(Template, Debug, Clone)]
+#[template(path = "test.c")]
+pub(crate) struct CTestTemplate<'a> {
+    translator: Translator,
+    headers: Vec<&'a str>,
+    ffi_items: &'a FfiItems,
+}
+```
+
+Now granted, those structs are backed by a template file each, but `askama` handles everything else, rendering is as simple as calling the `render` method.
+
+### Compilation and Running - The Woes of Cross-Compilation
+In `libc`, tier 1 targets are tested in CI natively, that is without the use of cross compiling. The same however cannot be said of tier 2 targets.
+
+Of course, you can't really test tier 2 targets if you can't run the tests, nor if you can't link them in the first place, so the CI provides a set of environment variables that contain the runner and linker to use.
+
+Using these environment variables, I was able to get some semblance of sane testing going, but it would break in inexplicable ways. For now though, it's best to just test on native targets.
+
+Fun fact, as I was going through the code for `ctest-test`, I found out that it too does not work properly on cross compiled targets, however `libc-test`, which should use the same libraries does.
+
+In turns out that `ctest-test` and our new integration tests manually run the generated binary, and as a result we can't rely on `cargo` doing everything for us. As a result it becomes harder to work with it.
+
+While tier 1 targets in CI are tested without cross compiling, the same cannot be said about tier 2 targets, and as such the correct linker and runner needed to be present for it to work. Thankfully the current CI system already had my back in that regard, and so I was able to successfully compile and run the tests on a number of platforms, although there still are some bugs, either in the CI or in my code (guess which).
+
+## What's Next?
+The next steps are to iron out those chinks, clean the code up a little, and get the `ctest-test` crate running on the new infrastructure.
+
+I tinkered around with that last part, and ended up with an extremely cursed and buggy mess. I don't think we're there _quite_ yet, but soon enough.
+
+Once that is done, the base of the infrastructure port is done, and then the frontend of the testing API would have to be improved to be feature complete compared to `ctest`. There's probably a million and one bugs to fix, and there's definitely alot of test generation templates to be written.

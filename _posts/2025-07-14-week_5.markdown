@@ -1,11 +1,23 @@
-Unfortunately, I was too busy last week to make a post. However the work done last week and this week were on the same topic. Ports!
+And Week 6...
 
+Relevant PRs: [Ports](https://github.com/rust-lang/libc/pull/4543)
+
+Also still in development: [`libc-test-port`](https://github.com/mbyx/libc/blob/libc-test-port/)
+
+## Introduction
+Unfortunately, I was too busy last week to make a post. However the work done last week and this week were on the same topic.
+
+Ports!
+
+## You get a port, and you get a port...
 Last week I started and finished porting `ctest-test` to use `ctest-next`. It's still in review and I expect a ton of changes but it does work perfectly, passing all test cases. In the process I also added tests for aliases, structs, and unions.
 
 This week I began porting `libc-test`, which marks the start of integrating the new testing infrastructure into the actual codebase. I started with porting linux tests (not realising they were 1300 lines out of 5600 lines), and apart from a couple of issues was reasonably able to run the tests, passing 27865 tests in the process (automated testing truly is amazing).
 
-I did however face an inscrutable problem. For some reason my linux header files are missing some structs and constants. Likely because I am using WSL. I was unable to figure out why and had to skip tests for those items. I hope to run it in CI to see if it's just a problem for me or not. If it is just a me problem, I'm confident that porting the rest of the 4000 lines should be quite possible.
+I did however face an inscrutable problem. For some reason my linux header files are missing some structs and constants. Likely because I am using Windows Subsystem for Linux (WSL). I was unable to figure out why and had to skip tests for those items. I hope to run it in CI to see if it's just a problem for me or not. If it _is_ just a me problem, I'm confident that porting the rest of the 4000 lines should be quite possible.
 
 Other than continuing the ports, the code has to be cleaned after reviews as I go, the last two tests for foreign statics and functions have to be added, and the issues blocking libc 1.0 have to be fixed.
+
+## What's Next?
 
 Code wise there shouldn't be an issue but time wise we might be cutting it close.
