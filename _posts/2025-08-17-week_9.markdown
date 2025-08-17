@@ -1,0 +1,53 @@
+And Week 8...
+
+#### Relevant PRs:  
+Week 8:
+- [Adding foreign function tests](https://github.com/rust-lang/libc/pull/4594)
+- [Adding foreign static tests](https://github.com/rust-lang/libc/pull/4601)
+- [Port windows to use ctest-next](https://github.com/rust-lang/libc/pull/4600)
+- [bug fixes batch 1](https://github.com/rust-lang/libc/pull/4644)
+- [Wrap padding fields with `Padding` type (unmerged)](https://github.com/rust-lang/libc/pull/4609)
+- [Improving the translation backend](https://github.com/rust-lang/libc/pull/4617)
+
+Week 9:
+- [Port apple to use ctest-next](https://github.com/rust-lang/libc/pull/4610)
+- [Port freebsd to use ctest-next](https://github.com/rust-lang/libc/pull/4648)
+- [bug fixes batch 2](https://github.com/rust-lang/libc/pull/4613)
+- [Adding a new Padding type](https://github.com/rust-lang/libc/pull/4632)
+- [Promoting ctest-next to be the new ctest](https://github.com/rust-lang/libc/pull/4655)
+- [Adding support for C enums (unmerged)](https://github.com/rust-lang/libc/pull/4658)
+- [Port linux to use ctest-next](https://github.com/rust-lang/libc/pull/4647)
+
+
+## Introduction
+As can be seen from the sheer amount of PRs, I actually tried to keep things self contained for once, and it paid off in dividents. I was quite busy once again and couldn't write a separate post for week 8.
+
+There's been a lot of work done, and I'm happy to say ctest now is feature comparable to the old ctest!
+
+### The last batch of tests
+The last two tests left were actually quite challenging. To test an external function, you have to pass it from C to Rust, and check that the function pointers match, otherwise they're two different functions! Of course, we can reasonably assume that if the functions have the same address then they are the same function, so there is no need to call it.
+
+For an external static, it gets a bit more complicated. A static variable can be of either a data type, array type, or a function pointer. All three of these have different function signatures and also the way they are sent from C to Rust is different. A function pointer can be returned directly, but for data types we need to manually return its address. The way it is checked is the same as the external function i.e. we compare the addresses.
+
+Or of course, you can just return a `void*`, assuming that any platform where you can't convert from a function pointer to a `void*` and back is probably not going to need to be tested.
+
+I spent quite a while on the first approach and got it to work, but it was quite unwieldy. The wrangling of the translator backend did remind my mentor of the fact that he had once written a C intermediate representation that followed all the strange rules of C. A detailed account of the method is described [here](https://web.archive.org/web/20210523053011/http://cseweb.ucsd.edu/~ricko/rt_lt.rule.html) (archived, because all the most useful stuff was nuked from the internet a long time ago).
+
+With some tweaks I got that working for the translation backend, which caused the generated tests to look nicer.
+
+### Platform ports
+Now that all of the tests were in place, I could just replace the `ctest` version of a platform's testing configuration one at a time. From an earlier week I already had the ported tests in place, I just had to replace the old ones with it. I first did windows, apple, and then freebsd. FreeBSD was given priority since testing for it had been broken for quite a while. (And for some reason fixed itself 2 days before I replaced it). There is also a linux port in the works, but there was a quite interesting revelation to be found there.
+
+Once these ports were in place and working, it was now fair game to promote `ctest-next` to the new `ctest`.
+
+### Interesting revelation
+While working on the linux port, I found that the old `ctest` somehow handled the case where the Rust side mapped a C Enum to a type alias and constants, without actually having any enum handling code at all. After a bit of debugging it was quite simple to understand, it handled this case by not handling it at all. Of course that means that I had to add in this new functionality, as a PR that is yet to be merged.
+
+### Miscellaneous
+While updating the backend, I found quite a bit of bugs. I also found some bugs while adding those tests in. So those were sumararilly fixed. They weren't interesting bugs, except for the fact that they involved accidentally swapping two variables, that for 90% of cases worked perfectly, but for the remaining 10% would result in strange transformations.
+
+I also tried fixing some other issues, notably one about replacing the current padding field types to use a dedicated `Padding` type. At first I tried to change it all in one go, but `ctest`, being `ctest`, failed for unexplainable reasons, so for now just the addition of the `Padding` type was merged (and somehow fixed the errors). 
+
+## What's Next?
+
+`ctest` is around 70% finished. It can now take up the role of the original without any problems, and so what's really left is the big three of difficult tasks. Documentation, smaller nice to have features, and finishing the porting process. There's two weeks left, and since these tasks are all mostly self contained, I'm confident that I'll be able to finish in time. I do however regret not starting on the documentation beforehand. There's also the problem of the vast swathes of FIXMEs I have laying around.
