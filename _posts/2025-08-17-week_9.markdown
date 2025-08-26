@@ -6,7 +6,7 @@ Week 8:
 - [Adding foreign static tests](https://github.com/rust-lang/libc/pull/4601)
 - [Port windows to use ctest-next](https://github.com/rust-lang/libc/pull/4600)
 - [bug fixes batch 1](https://github.com/rust-lang/libc/pull/4644)
-- [Wrap padding fields with `Padding` type (unmerged)](https://github.com/rust-lang/libc/pull/4609)
+- [Wrap padding fields with `Padding` type](https://github.com/rust-lang/libc/pull/4609)
 - [Improving the translation backend](https://github.com/rust-lang/libc/pull/4617)
 
 Week 9:
@@ -15,7 +15,7 @@ Week 9:
 - [bug fixes batch 2](https://github.com/rust-lang/libc/pull/4613)
 - [Adding a new Padding type](https://github.com/rust-lang/libc/pull/4632)
 - [Promoting ctest-next to be the new ctest](https://github.com/rust-lang/libc/pull/4655)
-- [Adding support for C enums (unmerged)](https://github.com/rust-lang/libc/pull/4658)
+- [Adding support for C enums](https://github.com/rust-lang/libc/pull/4658)
 - [Port linux to use ctest-next](https://github.com/rust-lang/libc/pull/4647)
 
 

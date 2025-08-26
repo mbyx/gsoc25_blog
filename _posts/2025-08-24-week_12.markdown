@@ -1,0 +1,22 @@
+And Week 10 and 11...
+
+#### Relevant PRs:  
+Week 10:
+- [Switch linux to ctest-next](https://github.com/rust-lang/libc/pull/4647)
+
+Week 11:
+- [Improve documentation and remove unused items](https://github.com/rust-lang/libc/pull/4665)
+- [Publish ctest to crates.io](https://github.com/rust-lang/libc/pull/4661)
+
+Week 12:
+- [Switch tier 3 targets to the new ctest](https://github.com/rust-lang/libc/pull/4670)
+- [Switch tier 2 targets to the new ctest](https://github.com/rust-lang/libc/pull/4675)
+- [Add defines for specific headers and language selection](https://github.com/rust-lang/libc/pull/4673)
+- [Expand macros using the correct target](https://github.com/rust-lang/libc/pull/4674)
+
+
+The first two weeks were quite slow, given that University had started back up. I had decided to focus on documentation, quick fixes and trying to port as much of the tests as possible to the new ctest. There isn't much to talk about here, except the fact that documenting things from the start reduced the amount of work I have to do now by a lot.
+
+Other than that I found a quite strange bug in the original ctest. For some reason, for only the `c_enum` macro and no other macro, ctest actually consumed the expansion without generating the revelant types and constants from it, causing every `c_enum` invocation to not be tested. This was then fixed in the new ctest. There's just one more bug left before it works, related to 64 bit and 32 bit time, which is a little difficult to figure out.
+
+In week 12 I got some more of the tedious work done, mainly switching tier 3 targets to the new ctest. For tier 2, I'm blocked on another PR. I added a new feature as well, allowing defines to only be valid for a single header file. I also readded the ability to choose between C and C++, because one of the testing platforms, i.e. Haiku requires it. I also fixed a bug (that was quite annoying to track down), where macros were not expanded on the correct targets when using VMs.
